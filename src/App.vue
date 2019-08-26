@@ -6,12 +6,15 @@
         id="nav"
       >
         <router-link to="/">Home</router-link>
-        <router-link to="/about">About</router-link>
-        <router-link to="/login">Login</router-link>
-        <router-link to="/register">Register</router-link>
+        <router-link
+          :key="item.title"
+          :to="item.link"
+          v-for="item in navItems"
+        >{{item.title}}</router-link>
         <button
           @click="handleLogout"
           type="button"
+          v-if="user"
         >Logout</button>
       </div>
 
@@ -23,11 +26,25 @@
 </template>
 
 <script>
+import { mapGetters } from "vuex";
+
 export default {
   name: "App",
   methods: {
     handleLogout() {
       this.$store.dispatch("logout");
+    }
+  },
+  computed: {
+    ...mapGetters(["user"]),
+    navItems() {
+      if (this.user) {
+        return [{ title: "Profile", link: "/profile" }];
+      }
+      return [
+        { title: "Login", link: "/login" },
+        { title: "Register", link: "/register" }
+      ];
     }
   }
 };

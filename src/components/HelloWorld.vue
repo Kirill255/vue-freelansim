@@ -1,24 +1,14 @@
 <template>
   <div class="hello">
     <h1>{{ msg }}</h1>
-
-    <div v-if="user">
-      <h3>User:</h3>
-      <p>Hello {{user.username}}</p>
-    </div>
   </div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
-
 export default {
   name: "HelloWorld",
   props: {
     msg: String
-  },
-  computed: {
-    ...mapGetters(["user"])
   }
 };
 </script>
