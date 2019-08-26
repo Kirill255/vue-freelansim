@@ -9,6 +9,10 @@
         <router-link to="/about">About</router-link>
         <router-link to="/login">Login</router-link>
         <router-link to="/register">Register</router-link>
+        <button
+          @click="handleLogout"
+          type="button"
+        >Logout</button>
       </div>
 
       <div class>
@@ -17,6 +21,17 @@
     </div>
   </div>
 </template>
+
+<script>
+export default {
+  name: "App",
+  methods: {
+    handleLogout() {
+      this.$store.dispatch("logout");
+    }
+  }
+};
+</script>
 
 <style lang="scss">
 #app {
