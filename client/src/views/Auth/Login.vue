@@ -82,14 +82,14 @@
       v-if="error"
     >{{error}}</p>
     <p
-      class="text-center text-red-500 text-xs"
+      class="text-center text-gray-500 text-xs"
       v-if="message"
     >{{message}}</p>
   </div>
 </template>
 
 <script>
-import { mapGetters, mapActions } from "vuex";
+import { mapActions } from "vuex";
 const { required, minLength, email } = require("vuelidate/lib/validators");
 import Auth from "@/services/Auth";
 
@@ -99,6 +99,7 @@ export default {
     return {
       email: "",
       password: "",
+      loading: false,
       message: "",
       error: null,
       rememberme: false
@@ -117,15 +118,16 @@ export default {
   watch: {
     rememberme: "setRememberMe"
   },
-  computed: {
-    ...mapGetters(["loading"])
-  },
   methods: {
     ...mapActions(["setToken"]),
-    async handleLogin() {
+    handleLogin() {
       this.$v.$touch();
       if (!this.$v.$invalid) {
-        await Auth.login({
+        this.message = "";
+        this.error = null;
+        this.loading = true;
+
+        Auth.login({
           email: this.email,
           password: this.password
         })
@@ -138,14 +140,12 @@ export default {
             this.setToken(token); // action
             this.$cookie.set("token", token);
             setTimeout(() => {
-              this.email = "";
-              this.password = "";
-              this.message = "";
-              this.error = null;
+              this.resetForm(); // method
               this.$router.push({ name: "profile" }).catch(() => {});
             }, 1000);
           })
           .catch(err => {
+            this.loading = false;
             // console.log("err :", err.response);
             // console.dir(err);
             if (!err.response) {
@@ -156,6 +156,14 @@ export default {
             // this.error = err.response.data.errors;
           });
       }
+    },
+    resetForm() {
+      this.email = "";
+      this.password = "";
+      this.loading = false;
+      this.message = "";
+      this.error = null;
+      this.$v.$reset();
     },
     setRememberMe() {
       console.log(this.rememberme);

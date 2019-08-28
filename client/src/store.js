@@ -7,8 +7,7 @@ export const store = new Vuex.Store({
   strict: process.env.NODE_ENV !== "production",
   state: {
     auth: false,
-    token: null,
-    loading: false
+    token: null
   },
   getters: {
     auth(state) {
@@ -16,9 +15,6 @@ export const store = new Vuex.Store({
     },
     token(state) {
       return state.token;
-    },
-    loading(state) {
-      return state.loading;
     }
   },
   mutations: {

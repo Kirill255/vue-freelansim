@@ -86,10 +86,6 @@
           class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           type="submit"
         >Register</button>
-        <a
-          class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-          href="#"
-        >Forgot Password?</a>
       </div>
     </form>
     <p
@@ -97,14 +93,13 @@
       v-if="error"
     >{{error}}</p>
     <p
-      class="text-center text-red-500 text-xs"
+      class="text-center text-gray-500 text-xs"
       v-if="message"
     >{{message}}</p>
   </div>
 </template>
 
 <script>
-import { mapGetters } from "vuex";
 const { required, minLength, email } = require("vuelidate/lib/validators");
 import Auth from "@/services/Auth";
 
@@ -115,6 +110,7 @@ export default {
       username: "",
       email: "",
       password: "",
+      loading: false,
       message: "",
       error: null
     };
@@ -133,14 +129,15 @@ export default {
       minLength: minLength(6)
     }
   },
-  computed: {
-    ...mapGetters(["loading"])
-  },
   methods: {
-    async handleRegister() {
+    handleRegister() {
       this.$v.$touch();
       if (!this.$v.$invalid) {
-        await Auth.registering({
+        this.message = "";
+        this.error = null;
+        this.loading = true;
+
+        Auth.registering({
           username: this.username,
           email: this.email,
           password: this.password
@@ -149,15 +146,12 @@ export default {
             console.log("res ", res);
             this.message = res.data.message;
             setTimeout(() => {
-              this.username = "";
-              this.email = "";
-              this.password = "";
-              this.message = "";
-              this.error = null;
+              this.resetForm(); // method
               this.$router.push({ name: "login" }).catch(() => {});
             }, 1000);
           })
           .catch(err => {
+            this.loading = false;
             // console.log("err :", err.response);
             // console.dir(err);
             if (!err.response) {
@@ -168,6 +162,15 @@ export default {
             // this.error = err.response.data.errors;
           });
       }
+    },
+    resetForm() {
+      this.username = "";
+      this.email = "";
+      this.password = "";
+      this.loading = false;
+      this.message = "";
+      this.error = null;
+      this.$v.$reset();
     }
   }
 };

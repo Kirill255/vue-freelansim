@@ -49,12 +49,10 @@ export default {
       Auth.logout()
         .then(res => {
           // console.log("res ", res);
-          setTimeout(() => {
-            this.$cookie.delete("token");
-            localStorage.removeItem("rememberme");
-            this.resetToken(); // action
-            this.$router.push({ name: "home" }).catch(() => {});
-          }, 1000);
+          this.$cookie.delete("token");
+          localStorage.removeItem("rememberme");
+          this.resetToken(); // action
+          this.$router.push({ name: "home" }).catch(() => {});
         })
         .catch(err => {
           console.log("err :", err);
