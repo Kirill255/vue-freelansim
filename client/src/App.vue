@@ -14,7 +14,7 @@
         <button
           @click="handleLogout"
           type="button"
-          v-if="user"
+          v-if="auth"
         >Logout</button>
       </div>
 
@@ -26,25 +26,41 @@
 </template>
 
 <script>
-import { mapGetters } from "vuex";
+import { mapGetters, mapActions } from "vuex";
+import Auth from "@/services/Auth";
 
 export default {
   name: "App",
-  methods: {
-    handleLogout() {
-      this.$store.dispatch("logout");
-    }
-  },
   computed: {
-    ...mapGetters(["user"]),
+    ...mapGetters(["auth"]),
     navItems() {
-      if (this.user) {
+      if (this.auth) {
         return [{ title: "Profile", link: "/profile" }];
       }
       return [
         { title: "Login", link: "/login" },
         { title: "Register", link: "/register" }
       ];
+    }
+  },
+  methods: {
+    ...mapActions(["resetToken"]),
+    handleLogout() {
+      Auth.logout()
+        .then(res => {
+          // console.log("res ", res);
+          setTimeout(() => {
+            this.$cookie.delete("token");
+            localStorage.removeItem("rememberme");
+            this.resetToken(); // action
+            this.$router.push({ name: "home" }).catch(() => {});
+          }, 1000);
+        })
+        .catch(err => {
+          console.log("err :", err);
+          // this.errors = err.response.data.errors;
+          // this.errors = err.message;
+        });
     }
   }
 };

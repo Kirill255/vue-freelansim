@@ -32,7 +32,7 @@ router.post("/register", (req, res, next) => {
 
 // /api/account/login, pass our strategy, and generate a token
 router.post("/login", passport.authenticate("local"), auth.generateAccessToken, (req, res) => {
-  return res.json({ success: true, email: req.user.username, token: req.token });
+  return res.json({ success: true, message: "Logined successfully", email: req.user.username, token: req.token });
 });
 
 // /api/account/logout, check the token

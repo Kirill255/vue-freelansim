@@ -1,71 +1,46 @@
 import Vue from "vue";
 import Vuex from "vuex";
 
-import router from "./router";
-
 Vue.use(Vuex);
 
-export default new Vuex.Store({
+export const store = new Vuex.Store({
+  strict: process.env.NODE_ENV !== "production",
   state: {
-    user: null,
-    loading: false,
-    error: null
+    auth: false,
+    token: null,
+    loading: false
   },
   getters: {
-    user(state) {
-      return state.user;
+    auth(state) {
+      return state.auth;
+    },
+    token(state) {
+      return state.token;
     },
     loading(state) {
       return state.loading;
-    },
-    error(state) {
-      return state.error;
     }
   },
   mutations: {
-    setUser(state, payload) {
-      state.user = payload;
+    changeAuth(state, payload) {
+      state.auth = payload;
     },
-    setLoading(state, payload) {
-      state.loading = payload;
+    setToken(state, payload) {
+      state.token = payload;
     },
-    setError(state, payload) {
-      state.error = payload;
-    },
-    clearUser(state) {
-      state.user = null;
-    },
-    clearError(state) {
-      state.error = null;
+    resetToken(state, payload) {
+      state.token = null;
     }
   },
   actions: {
-    register({ commit }, payload) {
-      commit("clearError");
-      commit("setLoading", true);
-      setTimeout(() => {
-        const token = Date.now().toString();
-        localStorage.setItem("token", token);
-        payload.token = token;
-        commit("setUser", payload);
-        commit("setLoading", false);
-      }, 3000);
+    setToken(store, payload) {
+      // console.log("payload :", payload);
+      store.commit("setToken", payload);
+      store.commit("changeAuth", true);
     },
-    login({ commit }, payload) {
-      commit("clearError");
-      commit("setLoading", true);
-      setTimeout(() => {
-        const token = Date.now().toString();
-        localStorage.setItem("token", token);
-        payload.token = token;
-        commit("setUser", payload);
-        commit("setLoading", false);
-      }, 3000);
-    },
-    logout({ commit }) {
-      commit("clearUser");
-      localStorage.setItem("token", "");
-      router.push("/").catch((err) => {});
+    resetToken(store) {
+      store.commit("resetToken");
+      store.commit("changeAuth", false);
     }
   }
 });
