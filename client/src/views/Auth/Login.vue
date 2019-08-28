@@ -11,12 +11,24 @@
           for="email"
         >Email</label>
         <input
+          :class="{'border-red-500 mb-3': $v.email.$error}"
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           id="email"
           placeholder="Email"
           type="text"
-          v-model="email"
+          v-model.trim="$v.email.$model"
         />
+        <!-- validation -->
+        <div v-if="$v.email.$error">
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.email.required"
+          >Email is required</p>
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.email.email"
+          >Email must be valid email addresses.</p>
+        </div>
       </div>
       <div class="mb-4">
         <label
@@ -24,13 +36,24 @@
           for="password"
         >Password</label>
         <input
-          class="shadow appearance-none border border-red-500 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+          :class="{'border-red-500 mb-3': $v.password.$error}"
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           id="password"
           placeholder="******************"
           type="password"
-          v-model="password"
+          v-model.trim="$v.password.$model"
         />
-        <p class="text-red-500 text-xs italic">Please choose a password.</p>
+        <!-- validation -->
+        <div v-if="$v.password.$error">
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.password.required"
+          >Password is required</p>
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.password.minLength"
+          >Password must have at least {{$v.password.$params.minLength.min}} letters.</p>
+        </div>
       </div>
       <div class="mb-6">
         <label class="md:w-2/3 block text-gray-500 font-bold">
@@ -55,11 +78,11 @@
       </div>
     </form>
     <p
-      class="text-center text-gray-500 text-xs"
+      class="text-center text-red-500 text-xs"
       v-if="error"
     >{{error}}</p>
     <p
-      class="text-center text-gray-500 text-xs"
+      class="text-center text-red-500 text-xs"
       v-if="message"
     >{{message}}</p>
   </div>
@@ -67,6 +90,7 @@
 
 <script>
 import { mapGetters, mapActions } from "vuex";
+const { required, minLength, email } = require("vuelidate/lib/validators");
 import Auth from "@/services/Auth";
 
 export default {
@@ -80,6 +104,16 @@ export default {
       rememberme: false
     };
   },
+  validations: {
+    email: {
+      required,
+      email
+    },
+    password: {
+      required,
+      minLength: minLength(6)
+    }
+  },
   watch: {
     rememberme: "setRememberMe"
   },
@@ -89,33 +123,39 @@ export default {
   methods: {
     ...mapActions(["setToken"]),
     async handleLogin() {
-      await Auth.login({
-        email: this.email,
-        password: this.password
-      })
-        .then(res => {
-          console.log("res ", res);
-          this.message = res.data.message;
-          // this.user = res.data.email;
-          // this.token = res.data.token;
-          let token = res.data.token;
-          this.setToken(token); // action
-          this.$cookie.set("token", token);
-          setTimeout(() => {
-            this.email = "";
-            this.password = "";
-            this.message = "";
-            this.error = null;
-            this.$router.push({ name: "profile" }).catch(() => {});
-          }, 1000);
+      this.$v.$touch();
+      if (!this.$v.$invalid) {
+        await Auth.login({
+          email: this.email,
+          password: this.password
         })
-        .catch(err => {
-          // console.log("err :", err);
-          console.log("err :", err.response);
-          // this.errors = err.response.data.errors;
-          this.error = err.response.data;
-          // this.error = err.message;
-        });
+          .then(res => {
+            console.log("res ", res);
+            this.message = res.data.message;
+            // this.user = res.data.email;
+            // this.token = res.data.token;
+            let token = res.data.token;
+            this.setToken(token); // action
+            this.$cookie.set("token", token);
+            setTimeout(() => {
+              this.email = "";
+              this.password = "";
+              this.message = "";
+              this.error = null;
+              this.$router.push({ name: "profile" }).catch(() => {});
+            }, 1000);
+          })
+          .catch(err => {
+            // console.log("err :", err.response);
+            // console.dir(err);
+            if (!err.response) {
+              this.error = err.message;
+            } else {
+              this.error = err.response.data;
+            }
+            // this.error = err.response.data.errors;
+          });
+      }
     },
     setRememberMe() {
       console.log(this.rememberme);

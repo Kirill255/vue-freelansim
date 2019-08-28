@@ -1,7 +1,9 @@
 import Vue from "vue";
 import VueCookie from "vue-cookie";
+import Vuelidate from "vuelidate";
 
 Vue.use(VueCookie);
+Vue.use(Vuelidate);
 
 import App from "./App.vue";
 

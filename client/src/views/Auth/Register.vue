@@ -11,12 +11,24 @@
           for="username"
         >Username</label>
         <input
+          :class="{'border-red-500 mb-3': $v.username.$error}"
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           id="username"
           placeholder="Username"
           type="text"
-          v-model="username"
+          v-model.trim="$v.username.$model"
         />
+        <!-- validation -->
+        <div v-if="$v.username.$error">
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.username.required"
+          >Username is required</p>
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.username.minLength"
+          >Username must have at least {{$v.username.$params.minLength.min}} letters.</p>
+        </div>
       </div>
       <div class="mb-4">
         <label
@@ -24,12 +36,24 @@
           for="email"
         >Email</label>
         <input
+          :class="{'border-red-500 mb-3': $v.email.$error}"
           class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           id="email"
           placeholder="Email"
           type="text"
-          v-model="email"
+          v-model.trim="$v.email.$model"
         />
+        <!-- validation -->
+        <div v-if="$v.email.$error">
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.email.required"
+          >Email is required</p>
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.email.email"
+          >Email must be valid email addresses.</p>
+        </div>
       </div>
       <div class="mb-6">
         <label
@@ -37,13 +61,24 @@
           for="password"
         >Password</label>
         <input
-          class="shadow appearance-none border border-red-500 rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+          :class="{'border-red-500 mb-3': $v.password.$error}"
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
           id="password"
           placeholder="******************"
           type="password"
-          v-model="password"
+          v-model.trim="$v.password.$model"
         />
-        <p class="text-red-500 text-xs italic">Please choose a password.</p>
+        <!-- validation -->
+        <div v-if="$v.password.$error">
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.password.required"
+          >Password is required</p>
+          <p
+            class="text-red-500 text-xs italic"
+            v-if="!$v.password.minLength"
+          >Password must have at least {{$v.password.$params.minLength.min}} letters.</p>
+        </div>
       </div>
       <div class="flex items-center justify-between">
         <button
@@ -58,11 +93,11 @@
       </div>
     </form>
     <p
-      class="text-center text-gray-500 text-xs"
+      class="text-center text-red-500 text-xs"
       v-if="error"
     >{{error}}</p>
     <p
-      class="text-center text-gray-500 text-xs"
+      class="text-center text-red-500 text-xs"
       v-if="message"
     >{{message}}</p>
   </div>
@@ -70,6 +105,7 @@
 
 <script>
 import { mapGetters } from "vuex";
+const { required, minLength, email } = require("vuelidate/lib/validators");
 import Auth from "@/services/Auth";
 
 export default {
@@ -83,33 +119,55 @@ export default {
       error: null
     };
   },
+  validations: {
+    username: {
+      required,
+      minLength: minLength(4)
+    },
+    email: {
+      required,
+      email
+    },
+    password: {
+      required,
+      minLength: minLength(6)
+    }
+  },
   computed: {
     ...mapGetters(["loading"])
   },
   methods: {
     async handleRegister() {
-      await Auth.registering({
-        username: this.username,
-        email: this.email,
-        password: this.password
-      })
-        .then(res => {
-          console.log("res ", res);
-          this.message = res.data.message;
-          setTimeout(() => {
-            this.username = "";
-            this.email = "";
-            this.password = "";
-            this.message = "";
-            this.error = null;
-            this.$router.push({ name: "login" }).catch(() => {});
-          }, 1000);
+      this.$v.$touch();
+      if (!this.$v.$invalid) {
+        await Auth.registering({
+          username: this.username,
+          email: this.email,
+          password: this.password
         })
-        .catch(err => {
-          console.log("err :", err.response);
-          this.error = err.response.data;
-          // this.error = err.response.data.errors;
-        });
+          .then(res => {
+            console.log("res ", res);
+            this.message = res.data.message;
+            setTimeout(() => {
+              this.username = "";
+              this.email = "";
+              this.password = "";
+              this.message = "";
+              this.error = null;
+              this.$router.push({ name: "login" }).catch(() => {});
+            }, 1000);
+          })
+          .catch(err => {
+            // console.log("err :", err.response);
+            // console.dir(err);
+            if (!err.response) {
+              this.error = err.message;
+            } else {
+              this.error = err.response.data;
+            }
+            // this.error = err.response.data.errors;
+          });
+      }
     }
   }
 };
