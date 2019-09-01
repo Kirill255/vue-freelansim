@@ -7,6 +7,7 @@
 </template>
 
 <script>
+import { mapActions } from "vuex";
 import Auth from "@/services/Auth";
 
 export default {
@@ -20,6 +21,7 @@ export default {
     this.getMe();
   },
   methods: {
+    ...mapActions(["resetToken"]),
     async getMe() {
       await Auth.getMe()
         .then(res => {
@@ -28,8 +30,16 @@ export default {
         })
         .catch(err => {
           console.log("err :", err);
+          // console.log(err.response.status);
+          // console.log(err.response.statusText);
+          // console.log(err.response.data);
+          // this.$router.replace({ name: "login" });
           // this.errors = err.response.data.errors;
           // this.error = err.message;
+          this.$cookie.delete("token");
+          localStorage.removeItem("rememberme");
+          this.resetToken(); // action
+          this.$router.push({ name: "home" }).catch(() => {});
         });
     }
   }
